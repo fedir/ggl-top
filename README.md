@@ -1,6 +1,6 @@
 # ggl-top - Google's Site's Top URLs
 
-A CLI app to retrieve top 100 indexed links of a site from the Google Search engine and to export it as a CSV file.
+A CLI app to retrieve a top 100 indexed links of a site from the Google Search engine results and to export to a CSV file.
 
 Could be used by SEO experts or any people, who are interested by controlling of site's ranking.
 
@@ -12,6 +12,10 @@ Could be used by SEO experts or any people, who are interested by controlling of
 
     ggl-top -s www.example.com
 
+## Development
+
+    go build
+    ./ggl-top -s www.example.com
 
 ## Credentials
 
