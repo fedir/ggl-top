@@ -1,6 +1,6 @@
 package main
 
-// Google result container
+// GoogleResult - Google result container
 type GoogleResult struct {
 	Rank        int
 	URL         string

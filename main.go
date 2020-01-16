@@ -15,9 +15,7 @@ var googleDomains = map[string]string{
 }
 
 func main() {
-
 	searchTerm, domain, countryCode, languageCode, _ := cliParameters()
-
 	googleResults, err := GoogleScrape(searchTerm, countryCode, languageCode)
 	if err == nil {
 		writeCSVData(googleResults, domain+".csv")
@@ -26,30 +24,24 @@ func main() {
 	}
 }
 
-func buildGoogleUrl(searchTerm string, countryCode string, languageCode string) string {
+func buildGoogleURL(searchTerm string, countryCode string, languageCode string) string {
 	searchTerm = strings.Trim(searchTerm, " ")
 	searchTerm = strings.Replace(searchTerm, " ", "+", -1)
 	if googleBase, found := googleDomains[countryCode]; found {
 		return fmt.Sprintf("%s%s&num=100&hl=%s", googleBase, searchTerm, languageCode)
-	} else {
-		return fmt.Sprintf("%s%s&num=100&hl=%s", googleDomains["com"], searchTerm, languageCode)
 	}
+	return fmt.Sprintf("%s%s&num=100&hl=%s", googleDomains["com"], searchTerm, languageCode)
 }
 
 func googleRequest(searchURL string) (*http.Response, error) {
-
 	baseClient := &http.Client{}
-
 	req, _ := http.NewRequest("GET", searchURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-
 	res, err := baseClient.Do(req)
-
 	if err != nil {
 		return nil, err
-	} else {
-		return res, nil
 	}
+	return res, nil
 }
 
 func googleResultParser(response *http.Response) ([]GoogleResult, error) {
@@ -77,22 +69,22 @@ func googleResultParser(response *http.Response) ([]GoogleResult, error) {
 				desc,
 			}
 			results = append(results, result)
-			rank += 1
+			rank++
 		}
 	}
 	return results, err
 }
 
+// GoogleScrape scrapes data from Google search engine
 func GoogleScrape(searchTerm string, countryCode string, languageCode string) ([]GoogleResult, error) {
-	googleUrl := buildGoogleUrl(searchTerm, countryCode, languageCode)
-	res, err := googleRequest(googleUrl)
+	googleURL := buildGoogleURL(searchTerm, countryCode, languageCode)
+	res, err := googleRequest(googleURL)
 	if err != nil {
 		return nil, err
 	}
 	scrapes, err := googleResultParser(res)
 	if err != nil {
 		return nil, err
-	} else {
-		return scrapes, nil
 	}
+	return scrapes, nil
 }
