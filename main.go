@@ -80,7 +80,6 @@ func googleResultParser(response *http.Response) ([]GoogleResult, []string, erro
 func parseResultsFromPage(doc *goquery.Document) []GoogleResult {
 	results := []GoogleResult{}
 	sel := doc.Find("div.g")
-	rank := 1
 	for i := range sel.Nodes {
 		item := sel.Eq(i)
 		linkTag := item.Find("a")
@@ -92,13 +91,11 @@ func parseResultsFromPage(doc *goquery.Document) []GoogleResult {
 		link = strings.Trim(link, " ")
 		if link != "" && link != "#" {
 			result := GoogleResult{
-				rank,
 				link,
 				title,
 				desc,
 			}
 			results = append(results, result)
-			rank++
 		}
 	}
 	return results

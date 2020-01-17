@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
 )
@@ -11,7 +10,6 @@ func writeCSVData(data []GoogleResult, csvFilePath string) {
 	var csvData [][]string
 	for _, gr := range data {
 		row := []string{
-			fmt.Sprintf("%d", gr.Rank),
 			gr.URL,
 			gr.Title,
 			gr.Description,
