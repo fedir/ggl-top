@@ -11,11 +11,12 @@ Could be used by SEO experts or any people, who are interested by controlling of
 ## Usage example
 
     ggl-top -s www.example.com
+    ggl-top -s www.example.com -c fr -l fr
 
 ## Development
 
     go build
-    ./ggl-top -s www.example.com
+    ./ggl-top -s www.example.com -c fr -l fr -d
 
 ## Credentials
 

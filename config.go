@@ -9,9 +9,9 @@ import (
 func cliParameters() (string, string, string, string, bool) {
 	var (
 		query        = ""
-		domain       = flag.String("s", "", "Site's domain")
-		countryCode  = flag.String("c", "fr", "Country code")
-		languageCode = flag.String("l", "fr", "Language code")
+		domain       = flag.String("s", "c", "Site's domain")
+		countryCode  = flag.String("c", "com", "Country code")
+		languageCode = flag.String("l", "en", "Language code")
 		debug        = flag.Bool("d", false, "Debug mode")
 	)
 	flag.Parse()

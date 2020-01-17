@@ -2,21 +2,26 @@ package main
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 var googleDomains = map[string]string{
-	"com": "https://www.google.com/search?q=",
-	"uk":  "https://www.google.co.uk/search?q=",
-	"ru":  "https://www.google.ru/search?q=",
-	"fr":  "https://www.google.fr/search?q=",
+	"com": "https://www.google.com",
+	"uk":  "https://www.google.co.uk",
+	"ru":  "https://www.google.ru",
+	"fr":  "https://www.google.fr",
 }
 
+var searchPrefix = "/search?q="
+
 func main() {
-	searchTerm, domain, countryCode, languageCode, _ := cliParameters()
-	googleResults, err := GoogleScrape(searchTerm, countryCode, languageCode)
+	searchTerm, domain, countryCode, languageCode, debug := cliParameters()
+	googleResults, err := GoogleScrape(searchTerm, countryCode, languageCode, debug)
 	if err == nil {
 		writeCSVData(googleResults, domain+".csv")
 	} else {
@@ -27,10 +32,22 @@ func main() {
 func buildGoogleURL(searchTerm string, countryCode string, languageCode string) string {
 	searchTerm = strings.Trim(searchTerm, " ")
 	searchTerm = strings.Replace(searchTerm, " ", "+", -1)
-	if googleBase, found := googleDomains[countryCode]; found {
-		return fmt.Sprintf("%s%s&num=100&hl=%s", googleBase, searchTerm, languageCode)
+
+	googleBase := googleDomains["com"] + searchPrefix
+	if googleDomain, found := googleDomains[countryCode]; found {
+		googleBase = googleDomain + searchPrefix
 	}
-	return fmt.Sprintf("%s%s&num=100&hl=%s", googleDomains["com"], searchTerm, languageCode)
+
+	return fmt.Sprintf("%s%s&num=100&hl=%s", googleBase, searchTerm, languageCode)
+}
+
+func buildGoogleURLPageLink(pageLink string, countryCode string) string {
+	googleBase := googleDomains["com"]
+	if googleDomain, found := googleDomains[countryCode]; found {
+		googleBase = googleDomain
+	}
+	fmt.Println(googleBase)
+	return fmt.Sprintf("%s%s", googleBase, pageLink)
 }
 
 func googleRequest(searchURL string) (*http.Response, error) {
@@ -44,11 +61,23 @@ func googleRequest(searchURL string) (*http.Response, error) {
 	return res, nil
 }
 
-func googleResultParser(response *http.Response) ([]GoogleResult, error) {
+func googleResultParser(response *http.Response) ([]GoogleResult, []string, error) {
 	doc, err := goquery.NewDocumentFromResponse(response)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	results := parseResultsFromPage(doc)
+	pagesLinks := []string{}
+	linksPages := doc.Find("a.fl")
+	for i := range linksPages.Nodes {
+		item := linksPages.Eq(i)
+		pageLink, _ := item.Attr("href")
+		pagesLinks = append(pagesLinks, pageLink)
+	}
+	return results, pagesLinks, err
+}
+
+func parseResultsFromPage(doc *goquery.Document) []GoogleResult {
 	results := []GoogleResult{}
 	sel := doc.Find("div.g")
 	rank := 1
@@ -72,19 +101,43 @@ func googleResultParser(response *http.Response) ([]GoogleResult, error) {
 			rank++
 		}
 	}
-	return results, err
+	return results
 }
 
 // GoogleScrape scrapes data from Google search engine
-func GoogleScrape(searchTerm string, countryCode string, languageCode string) ([]GoogleResult, error) {
+func GoogleScrape(searchTerm string, countryCode string, languageCode string, debug bool) ([]GoogleResult, error) {
 	googleURL := buildGoogleURL(searchTerm, countryCode, languageCode)
+	if debug {
+		fmt.Println(googleURL)
+	}
 	res, err := googleRequest(googleURL)
 	if err != nil {
 		return nil, err
 	}
-	scrapes, err := googleResultParser(res)
+	scrapes, pagesLinks, err := googleResultParser(res)
+	for _, pl := range pagesLinks {
+		if strings.HasPrefix(pl, searchPrefix) {
+			randomSleep(5)
+			googleURL = buildGoogleURLPageLink(pl, countryCode)
+			fmt.Printf("Adding additional links from the page: %s\n", googleURL)
+			res, err := googleRequest(googleURL)
+			if err != nil {
+				return nil, err
+			}
+			scrapesOtherPages, _, err := googleResultParser(res)
+			scrapes = append(scrapes, scrapesOtherPages...)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 	return scrapes, nil
+}
+
+func randomSleep(maxSleepTime int) {
+	rand.Seed(time.Now().UnixNano())
+	time.Sleep(time.Duration(rand.Intn(maxSleepTime)) * time.Second)
 }
