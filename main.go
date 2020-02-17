@@ -20,10 +20,15 @@ var googleDomains = map[string]string{
 var searchPrefix = "/search?q="
 
 func main() {
-	searchTerm, domain, countryCode, languageCode, debug := cliParameters()
+	searchTerm, domain, countryCode, languageCode, output, debug := cliParameters()
 	googleResults, err := GoogleScrape(searchTerm, countryCode, languageCode, debug)
 	if err == nil {
-		writeCSVData(googleResults, domain+".csv")
+		if output == "xlsx" || output == "xls" {
+			writeXLSXData(googleResults, domain+".xlsx")
+		} else {
+			writeCSVData(googleResults, domain+".csv")
+		}
+
 	} else {
 		fmt.Println("Error occured", err)
 	}

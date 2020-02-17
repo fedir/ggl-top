@@ -6,12 +6,13 @@ import (
 )
 
 // Getting parameters from CLI
-func cliParameters() (string, string, string, string, bool) {
+func cliParameters() (string, string, string, string, string, bool) {
 	var (
 		query        = ""
 		domain       = flag.String("s", "c", "Site's domain")
 		countryCode  = flag.String("c", "com", "Country code")
 		languageCode = flag.String("l", "en", "Language code")
+		output       = flag.String("o", "csv", "Output format")
 		debug        = flag.Bool("d", false, "Debug mode")
 	)
 	flag.Parse()
@@ -21,5 +22,5 @@ func cliParameters() (string, string, string, string, bool) {
 		query = "site:" + *domain
 	}
 
-	return query, *domain, *countryCode, *languageCode, *debug
+	return query, *domain, *countryCode, *languageCode, *output, *debug
 }
